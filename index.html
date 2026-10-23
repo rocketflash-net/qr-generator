@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR Code Generator</title>
+<meta name="description" content="Make QR codes for links, QRIS payments, contacts, Wi-Fi, locations, WhatsApp, email and events. Download as PNG or SVG. Runs entirely in your browser.">
+<meta name="author" content="Daniel Aldo Pratama">
+<link rel="canonical" href="https://rocketflash-net.github.io/qr-generator/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="QR Code Generator">
+<meta property="og:description" content="QR codes for links, QRIS payments, contacts, Wi-Fi, locations and more. PNG or SVG, made in your browser.">
+<meta property="og:url" content="https://rocketflash-net.github.io/qr-generator/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232b45d4'/%3E%3Cpath d='M8 8h6v6H8zM18 8h6v6h-6zM8 18h6v6H8zM18 18h2v2h-2zM22 22h2v2h-2zM18 22h2v2h-2zM22 18h2v2h-2z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f7fb; --surface:#ffffff; --ink:#151a28; --slate:#5a6275; --line:#e1e4ee;
+  --cobalt:#2b45d4; --cobalt-wash:#eaedfc; --field:#f6f7fb;
+  --ok:#1f9d63; --ok-wash:#e3f6ec; --warn:#b26a00; --warn-wash:#fff3dc; --err:#c8323c; --err-wash:#fde8ea;
+  --max:72rem; --gutter:clamp(1rem,4vw,2.5rem);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d1220; --surface:#131a2c; --ink:#e7eaf3; --slate:#98a0b6; --line:#232b42;
+    --cobalt:#8fa2ff; --cobalt-wash:#1a2246; --field:#0d1220;
+    --ok:#3ccf8e; --ok-wash:#0f2a20; --warn:#ffb547; --warn-wash:#2c2210; --err:#ff6b74; --err-wash:#2e1418;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d1220; --surface:#131a2c; --ink:#e7eaf3; --slate:#98a0b6; --line:#232b42;
+  --cobalt:#8fa2ff; --cobalt-wash:#1a2246; --field:#0d1220;
+  --ok:#3ccf8e; --ok-wash:#0f2a20; --warn:#ffb547; --warn-wash:#2c2210; --err:#ff6b74; --err-wash:#2e1418;
+}
+*{box-sizing:border-box;margin:0;padding:0;min-width:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font:400 1rem/1.6 "Schibsted Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--cobalt);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
+
+.bar{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.25rem 0;font-size:.95rem}
+.bar .home{color:var(--ink);text-decoration:none;font-weight:600}
+.bar .right{display:flex;gap:.6rem;align-items:center}
+.bar .right a{color:var(--slate);text-decoration:none;margin-right:.6rem}
+.bar .right a:hover{color:var(--ink)}
+.toggle{background:var(--surface);border:1px solid var(--line);color:var(--ink);height:2.1rem;min-width:2.1rem;border-radius:999px;cursor:pointer;font:inherit;font-size:.85rem}
+.lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.lang button{background:none;border:0;color:var(--slate);font:600 .8rem/1 "Schibsted Grotesk",sans-serif;padding:.6rem .7rem;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--cobalt);color:#fff}
+:root[data-theme="dark"] .lang button[aria-pressed="true"]{color:#0d1220}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lang button[aria-pressed="true"]{color:#0d1220}}
+
+header.top{padding:clamp(1.5rem,5vw,3.25rem) 0 clamp(1.5rem,4vw,2.25rem)}
+h1{font-size:clamp(2.2rem,5.5vw,3.6rem);line-height:1.02;letter-spacing:-.035em;font-weight:800}
+h1 span{color:var(--cobalt)}
+.lede{color:var(--slate);margin-top:.9rem;max-width:40rem;font-size:1.06rem}
+
+.app{display:grid;grid-template-columns:minmax(0,1fr) 23rem;gap:1.25rem;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.section{padding:1.1rem 1.2rem}
+.section + .section{border-top:1px solid var(--line)}
+.eyebrow{font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--slate);margin-bottom:.75rem}
+
+.types{display:flex;flex-wrap:wrap;gap:.45rem}
+.types button{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 .92rem/1 "Schibsted Grotesk",sans-serif;padding:.6rem .85rem;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:.45rem}
+.types button svg{width:1rem;height:1rem;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--slate)}
+.types button:hover{border-color:var(--cobalt)}
+.types button[aria-pressed="true"]{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+.types button[aria-pressed="true"] svg{color:inherit}
+:root[data-theme="dark"] .types button[aria-pressed="true"]{color:#0d1220}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .types button[aria-pressed="true"]{color:#0d1220}}
+
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:.9rem 1rem}
+.f{display:flex;flex-direction:column;gap:.35rem}
+.f.full{grid-column:1 / -1}
+.f label{font-weight:600;font-size:.88rem}
+.f .hint{color:var(--slate);font-size:.82rem;line-height:1.45}
+input[type=text],input[type=url],input[type=email],input[type=tel],input[type=datetime-local],select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;background:var(--field);color:var(--ink);font:400 .95rem/1.4 "Schibsted Grotesk",sans-serif;padding:.62rem .75rem}
+textarea{min-height:5.5rem;resize:vertical}
+textarea.mono,input.mono{font:400 .86rem/1.55 "IBM Plex Mono",ui-monospace,monospace;word-break:break-all}
+input:focus,select:focus,textarea:focus{border-color:var(--cobalt)}
+.check{display:flex;align-items:center;gap:.55rem;font-weight:500;font-size:.92rem;padding-top:1.6rem}
+.check input{width:1.05rem;height:1.05rem;accent-color:var(--cobalt)}
+
+.style{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem 1rem}
+.color{display:flex;align-items:center;gap:.5rem;border:1px solid var(--line);border-radius:9px;background:var(--field);padding:.3rem .5rem .3rem .3rem}
+.color input[type=color]{width:2rem;height:2rem;border:0;border-radius:6px;background:none;padding:0;cursor:pointer}
+.color input[type=text]{border:0;background:none;padding:.2rem 0;font:400 .85rem "IBM Plex Mono",monospace;width:100%}
+
+.preview{position:sticky;top:1rem}
+.stage{padding:1.2rem;display:grid;place-items:center;border-bottom:1px solid var(--line);background:
+  linear-gradient(45deg,var(--line) 25%,transparent 25%,transparent 75%,var(--line) 75%) 0 0/16px 16px,
+  linear-gradient(45deg,var(--line) 25%,transparent 25%,transparent 75%,var(--line) 75%) 8px 8px/16px 16px;border-radius:14px 14px 0 0}
+#qr{width:100%;max-width:19rem;aspect-ratio:1;display:grid;place-items:center;border-radius:6px;overflow:hidden;box-shadow:0 18px 40px -24px rgba(21,26,40,.55)}
+#qr svg{width:100%;height:100%;display:block}
+.placeholder{width:100%;height:100%;display:grid;place-items:center;text-align:center;padding:1.5rem;background:var(--surface);color:var(--slate);font-size:.9rem;border:1px dashed var(--line);border-radius:6px}
+.meta{font:400 .78rem/1.5 "IBM Plex Mono",monospace;color:var(--slate);padding:.8rem 1.2rem 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding:.8rem 1.2rem 1.1rem}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:.4rem;padding:.65rem 1rem;border-radius:9px;font:600 .92rem/1.2 "Schibsted Grotesk",sans-serif;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--surface);cursor:pointer}
+.btn:hover{border-color:var(--cobalt)}
+.btn.solid{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+:root[data-theme="dark"] .btn.solid{color:#0d1220}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.solid{color:#0d1220}}
+.btn[disabled]{opacity:.45;cursor:not-allowed;border-color:var(--line)}
+.btn.wide{grid-column:1 / -1}
+
+.notes{list-style:none;display:grid;gap:.45rem;padding:0 1.2rem 1rem}
+.notes:empty{display:none}
+.notes li{font-size:.86rem;line-height:1.45;padding:.55rem .75rem;border-radius:9px}
+.notes .ok{background:var(--ok-wash);color:var(--ok)}
+.notes .warn{background:var(--warn-wash);color:var(--warn)}
+.notes .err{background:var(--err-wash);color:var(--err)}
+
+details.payload{border-top:1px solid var(--line)}
+details.payload summary{cursor:pointer;padding:.8rem 1.2rem;font-weight:600;font-size:.9rem;list-style:none;display:flex;justify-content:space-between}
+details.payload summary::-webkit-details-marker{display:none}
+details.payload summary::after{content:"+";color:var(--slate)}
+details.payload[open] summary::after{content:"−"}
+details.payload pre{margin:0 1.2rem 1.1rem;padding:.75rem .85rem;background:var(--field);border:1px solid var(--line);border-radius:9px;font:400 .8rem/1.55 "IBM Plex Mono",monospace;white-space:pre-wrap;word-break:break-all;max-height:14rem;overflow:auto}
+.privacy{color:var(--slate);font-size:.84rem;line-height:1.5;padding:1rem 1.2rem;border-top:1px solid var(--line)}
+
+footer{padding:2.5rem 0 3rem;color:var(--slate);font-size:.9rem}
+
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .preview{position:static}
+}
+@media (max-width:600px){
+  .bar .right a{display:none}
+  .fields{grid-template-columns:1fr}
+  .style{grid-template-columns:1fr 1fr}
+  .check{padding-top:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <a class="home" href="https://rocketflash-net.github.io/it/">Daniel Aldo Pratama</a>
+    <div class="right">
+      <a href="https://github.com/rocketflash-net/qr-generator" target="_blank" rel="noopener">GitHub</a>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang="id" aria-pressed="false">ID</button>
+      </div>
+      <button class="toggle" id="theme" type="button" aria-label="Switch light or dark theme">◐</button>
+    </div>
+  </div>
+
+  <header class="top">
+    <h1>QR Code <span>Generator</span></h1>
+    <p class="lede" data-t="lede"></p>
+  </header>
+
+  <div class="app">
+    <div class="card">
+      <div class="section">
+        <p class="eyebrow" data-t="kind"></p>
+        <div class="types" id="types" role="group"></div>
+      </div>
+      <div class="section">
+        <p class="eyebrow" data-t="content"></p>
+        <div class="fields" id="fields"></div>
+      </div>
+      <div class="section">
+        <p class="eyebrow" data-t="style"></p>
+        <div class="style">
+          <div class="f"><label for="fg" data-t="fg"></label><div class="color"><input type="color" id="fg" value="#000000" aria-label="Foreground"><input type="text" id="fgHex" value="#000000" maxlength="7" aria-label="Foreground hex"></div></div>
+          <div class="f"><label for="bg" data-t="bg"></label><div class="color"><input type="color" id="bg" value="#ffffff" aria-label="Background"><input type="text" id="bgHex" value="#ffffff" maxlength="7" aria-label="Background hex"></div></div>
+          <div class="f"><label for="ec" data-t="ec"></label><select id="ec"><option value="L">L · 7%</option><option value="M" selected>M · 15%</option><option value="Q">Q · 25%</option><option value="H">H · 30%</option></select></div>
+          <div class="f"><label for="size" data-t="size"></label><select id="size"><option value="512">512 px</option><option value="1024" selected>1024 px</option><option value="2048">2048 px</option></select></div>
+          <div class="f"><label for="margin" data-t="margin"></label><select id="margin"><option value="1">1</option><option value="2">2</option><option value="4" selected>4</option><option value="6">6</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="card preview" aria-live="polite">
+      <div class="stage"><div id="qr"></div></div>
+      <p class="meta" id="meta"></p>
+      <div class="actions">
+        <button class="btn solid" type="button" id="png">PNG</button>
+        <button class="btn" type="button" id="svg">SVG</button>
+        <button class="btn wide" type="button" id="copy" data-t="copy"></button>
+      </div>
+      <ul class="notes" id="notes"></ul>
+      <details class="payload"><summary data-t="payload"></summary><pre id="payload"></pre></details>
+      <p class="privacy" data-t="privacy"></p>
+    </aside>
+  </div>
+</div>
+
+<footer><div class="wrap"><span data-t="by"></span> <a href="https://rocketflash-net.github.io/it/">Daniel Aldo Pratama</a> · <a href="https://rocketflash-net.github.io/qris-tlv-decoder/" data-t="decoder"></a> · <a href="https://github.com/rocketflash-net/qr-generator" target="_blank" rel="noopener" data-t="source"></a></div></footer>
+
+<script src="vendor/qrcode.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  // The bundled UTF-8 helper mishandles emoji, so encode bytes with TextEncoder instead
+  var enc = new TextEncoder();
+  qrcode.stringToBytes = function(s){ return Array.prototype.slice.call(enc.encode(s)); };
+
+  // ---------- i18n ----------
+  var UI = {
+    en: {
+      lede: 'Make a QR code for a link, a QRIS payment, a contact card, Wi-Fi, a location and more. Download it as PNG or SVG. Everything runs in your browser.',
+      kind: 'What goes in the QR', content: 'Content', style: 'Style',
+      fg: 'Foreground', bg: 'Background', ec: 'Error correction', size: 'PNG size', margin: 'Quiet zone',
+      copy: 'Copy content', copied: 'Copied', payload: 'Encoded content',
+      empty: 'Fill in the fields to create a QR code.',
+      privacy: 'Nothing you type is sent to a server or saved. The QR code is drawn on this page.',
+      by: 'Built by', decoder: 'QRIS TLV Decoder', source: 'Source on GitHub',
+      meta: function(v, n, b, ec){ return 'Version ' + v + ' · ' + n + '×' + n + ' modules · ' + b + ' bytes · EC ' + ec; },
+      tooLong: 'Too much content for a QR code. Shorten it or lower the error correction.',
+      lowContrast: 'Low contrast between the colours. Some phones may not read this code.',
+      inverted: 'The foreground is lighter than the background. Many scanners cannot read inverted codes.',
+      qrisOk: function(crc){ return 'Valid QRIS structure, CRC ' + crc + ' is correct.'; },
+      qrisCrc: function(had, calc){ return 'CRC does not match (payload has ' + had + ', expected ' + calc + '). Scanners will reject this code.'; },
+      qrisParse: 'Could not read this as QRIS, so it is encoded as-is. Check it with the QRIS TLV Decoder.',
+      qrisAmountBad: 'Amount must be digits with an optional decimal point, at most 13 characters (e.g. 25000 or 25000.00).',
+      qrisAmountSet: function(a, crc){ return 'Amount ' + a + ' set in tag 54, tag 01 set to dynamic (12), new CRC ' + crc + '.'; },
+      qrisMerchant: function(n, c){ return 'Merchant: ' + n + (c ? ', ' + c : ''); },
+      waNumber: 'Number normalised to international format: ',
+      locNeed: 'Fill in an address or coordinates.'
+    },
+    id: {
+      lede: 'Buat QR code untuk tautan, pembayaran QRIS, kartu kontak, Wi-Fi, lokasi dan lainnya. Unduh sebagai PNG atau SVG. Semua diproses di browser Anda.',
+      kind: 'Isi QR', content: 'Konten', style: 'Tampilan',
+      fg: 'Warna depan', bg: 'Warna latar', ec: 'Koreksi error', size: 'Ukuran PNG', margin: 'Margin',
+      copy: 'Salin konten', copied: 'Tersalin', payload: 'Konten yang di-encode',
+      empty: 'Isi kolom di samping untuk membuat QR code.',
+      privacy: 'Tidak ada data yang dikirim ke server atau disimpan. QR code digambar langsung di halaman ini.',
+      by: 'Dibuat oleh', decoder: 'QRIS TLV Decoder', source: 'Kode sumber di GitHub',
+      meta: function(v, n, b, ec){ return 'Versi ' + v + ' · ' + n + '×' + n + ' modul · ' + b + ' byte · EC ' + ec; },
+      tooLong: 'Konten terlalu panjang untuk QR code. Persingkat atau turunkan koreksi error.',
+      lowContrast: 'Kontras warna rendah. Sebagian ponsel mungkin tidak bisa membaca kode ini.',
+      inverted: 'Warna depan lebih terang dari latar. Banyak scanner tidak bisa membaca kode terbalik.',
+      qrisOk: function(crc){ return 'Struktur QRIS valid, CRC ' + crc + ' benar.'; },
+      qrisCrc: function(had, calc){ return 'CRC tidak cocok (tertulis ' + had + ', seharusnya ' + calc + '). Scanner akan menolak kode ini.'; },
+      qrisParse: 'Tidak bisa dibaca sebagai QRIS, jadi di-encode apa adanya. Cek dengan QRIS TLV Decoder.',
+      qrisAmountBad: 'Nominal harus angka dengan desimal opsional, maksimal 13 karakter (contoh 25000 atau 25000.00).',
+      qrisAmountSet: function(a, crc){ return 'Nominal ' + a + ' diisi di tag 54, tag 01 diubah ke dinamis (12), CRC baru ' + crc + '.'; },
+      qrisMerchant: function(n, c){ return 'Merchant: ' + n + (c ? ', ' + c : ''); },
+      waNumber: 'Nomor diubah ke format internasional: ',
+      locNeed: 'Isi alamat atau koordinat.'
+    }
+  };
+  var lang = 'en';
+  function L(en, id){ return {en: en, id: id}; }
+  function tr(x){ return x == null ? '' : (typeof x === 'string' ? x : x[lang]); }
+  function u(k){ return UI[lang][k]; }
+
+  // ---------- Helpers ----------
+  function wifiEsc(s){ return s.replace(/([\\;,:"])/g, '\\$1'); }
+  function vEsc(s){ return s.replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/([,;])/g, '\\$1'); }
+  function url(s){
+    s = s.trim();
+    if (!s) return '';
+    return /^[a-z][a-z0-9+.-]*:/i.test(s) ? s : 'https://' + s;
+  }
+  function digits(s){ return s.replace(/[^\d+]/g, ''); }
+  function waNumber(s){
+    var d = s.replace(/\D/g, '');
+    return d.charAt(0) === '0' ? '62' + d.slice(1) : d;
+  }
+  function icsDate(s){ return s ? s.replace(/[-:]/g, '').replace(/(T\d{4})$/, '$100') : ''; }
+
+  function tlv(tag, v){ return tag + ('0' + v.length).slice(-2) + v; }
+  function crc16(str){
+    var bytes = enc.encode(str), crc = 0xFFFF;
+    for (var i = 0; i < bytes.length; i++) {
+      crc ^= bytes[i] << 8;
+      for (var j = 0; j < 8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+    }
+    return ('000' + crc.toString(16).toUpperCase()).slice(-4);
+  }
+  // Strict root-level TLV parse; returns null when the string is not well-formed
+  function parseTLV(s){
+    var items = [], i = 0;
+    while (i < s.length) {
+      var tag = s.substr(i, 2), ls = s.substr(i + 2, 2);
+      if (!/^\d\d$/.test(tag) || !/^\d\d$/.test(ls) || i + 4 + +ls > s.length) return null;
+      items.push({tag:tag, value:s.substr(i + 4, +ls)});
+      i += 4 + +ls;
+    }
+    return items;
+  }
+
+  // ---------- Content types ----------
+  var ICON = {
+    url:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+    qris:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h7v-4"/>',
+    text:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+    contact:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+    wifi:'<path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r=".8"/>',
+    location:'<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+    whatsapp:'<path d="M20 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-4.2A8.5 8.5 0 1 1 20 11.5z"/>',
+    email:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+    phone:'<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
+    sms:'<path d="M4 5h16v11H8l-4 4z"/>',
+    event:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'
+  };
+
+  var TYPES = [
+    {id:'url', label:L('Link','Tautan'), fields:[
+      {k:'url', t:'url', full:true, label:L('Website address','Alamat situs'), ph:'https://example.com'}],
+      build:function(f){ return {text:url(f.url || '')}; }},
+    {id:'qris', label:L('QRIS payment','Pembayaran QRIS'), fields:[
+      {k:'payload', t:'textarea', full:true, mono:true, label:L('QRIS payload','Payload QRIS'), ph:'00020101021126...6304XXXX',
+        hint:L('Paste the QRIS string from your provider.','Tempel string QRIS dari penyedia Anda.')},
+      {k:'amount', t:'text', mode:'decimal', label:L('Amount (optional)','Nominal (opsional)'), ph:'25000',
+        hint:L('Fills tag 54, switches tag 01 to dynamic (12) and recalculates the CRC.','Mengisi tag 54, mengubah tag 01 menjadi dinamis (12) dan menghitung ulang CRC.')}],
+      build:buildQris},
+    {id:'text', label:L('Text','Teks'), fields:[
+      {k:'text', t:'textarea', full:true, label:L('Text','Teks'), ph:L('Anything you want to share','Teks apa saja')}],
+      build:function(f){ return {text:f.text || ''}; }},
+    {id:'contact', label:L('Contact','Kontak'), fields:[
+      {k:'first', t:'text', label:L('First name','Nama depan')},
+      {k:'last', t:'text', label:L('Last name','Nama belakang')},
+      {k:'phone', t:'tel', label:L('Phone','Telepon'), ph:'+62 812 3456 7890'},
+      {k:'email', t:'email', label:'Email', ph:'name@example.com'},
+      {k:'org', t:'text', label:L('Company','Perusahaan')},
+      {k:'title', t:'text', label:L('Job title','Jabatan')},
+      {k:'web', t:'url', full:true, label:'Website', ph:'https://example.com'},
+      {k:'street', t:'text', full:true, label:L('Street address','Alamat jalan')},
+      {k:'city', t:'text', label:L('City','Kota')},
+      {k:'postal', t:'text', label:L('Postal code','Kode pos')},
+      {k:'country', t:'text', label:L('Country','Negara'), ph:'Indonesia'},
+      {k:'note', t:'text', label:L('Note','Catatan')}],
+      build:function(f){
+        if (!f.first && !f.last && !f.phone && !f.email && !f.org) return {text:''};
+        var fn = [f.first, f.last].filter(Boolean).join(' ') || f.org;
+        var v = ['BEGIN:VCARD', 'VERSION:3.0', 'N:' + vEsc(f.last || '') + ';' + vEsc(f.first || '') + ';;;', 'FN:' + vEsc(fn || '')];
+        if (f.org) v.push('ORG:' + vEsc(f.org));
+        if (f.title) v.push('TITLE:' + vEsc(f.title));
+        if (f.phone) v.push('TEL;TYPE=CELL:' + digits(f.phone));
+        if (f.email) v.push('EMAIL:' + f.email.trim());
+        if (f.web) v.push('URL:' + url(f.web));
+        if (f.street || f.city || f.postal || f.country) v.push('ADR;TYPE=WORK:;;' + [f.street, f.city, '', f.postal, f.country].map(function(x){ return vEsc(x || ''); }).join(';'));
+        if (f.note) v.push('NOTE:' + vEsc(f.note));
+        v.push('END:VCARD');
+        return {text:v.join('\r\n')};
+      }},
+    {id:'wifi', label:'Wi-Fi', fields:[
+      {k:'ssid', t:'text', label:L('Network name (SSID)','Nama jaringan (SSID)')},
+      {k:'pass', t:'text', label:L('Password','Kata sandi')},
+      {k:'sec', t:'select', label:L('Security','Keamanan'), opts:[['WPA','WPA/WPA2/WPA3'],['WEP','WEP'],['nopass',L('None','Tanpa sandi')]]},
+      {k:'hidden', t:'check', label:L('Hidden network','Jaringan tersembunyi')}],
+      build:function(f){
+        if (!f.ssid) return {text:''};
+        var sec = f.sec || 'WPA';
+        return {text:'WIFI:T:' + sec + ';S:' + wifiEsc(f.ssid) + ';' + (sec !== 'nopass' && f.pass ? 'P:' + wifiEsc(f.pass) + ';' : '') + (f.hidden ? 'H:true;' : '') + ';'};
+      }},
+    {id:'location', label:L('Location','Lokasi'), fields:[
+      {k:'addr', t:'textarea', full:true, label:L('Address or place name','Alamat atau nama tempat'), ph:'Monas, Jakarta Pusat'},
+      {k:'lat', t:'text', mode:'decimal', label:'Latitude', ph:'-6.175392'},
+      {k:'lng', t:'text', mode:'decimal', label:'Longitude', ph:'106.827153',
+        hint:L('Coordinates take priority over the address. The code opens Google Maps.','Koordinat diutamakan dari alamat. Kode akan membuka Google Maps.')}],
+      build:function(f){
+        var q = f.lat && f.lng ? f.lat.trim() + ',' + f.lng.trim() : (f.addr || '').trim();
+        return {text:q ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q) : ''};
+      }},
+    {id:'whatsapp', label:'WhatsApp', fields:[
+      {k:'num', t:'tel', label:L('WhatsApp number','Nomor WhatsApp'), ph:'0812 3456 7890'},
+      {k:'msg', t:'textarea', full:true, label:L('Message (optional)','Pesan (opsional)')}],
+      build:function(f){
+        var n = waNumber(f.num || '');
+        if (!n) return {text:''};
+        var notes = n !== (f.num || '').replace(/\D/g, '') ? [{lv:'ok', msg:u('waNumber') + '+' + n}] : [];
+        return {text:'https://wa.me/' + n + (f.msg ? '?text=' + encodeURIComponent(f.msg) : ''), notes:notes};
+      }},
+    {id:'email', label:'Email', fields:[
+      {k:'to', t:'email', label:L('To','Kepada'), ph:'name@example.com'},
+      {k:'subject', t:'text', label:L('Subject','Subjek')},
+      {k:'body', t:'textarea', full:true, label:L('Message','Pesan')}],
+      build:function(f){
+        if (!f.to) return {text:''};
+        var q = [];
+        if (f.subject) q.push('subject=' + encodeURIComponent(f.subject));
+        if (f.body) q.push('body=' + encodeURIComponent(f.body));
+        return {text:'mailto:' + f.to.trim() + (q.length ? '?' + q.join('&') : '')};
+      }},
+    {id:'phone', label:L('Phone','Telepon'), fields:[
+      {k:'num', t:'tel', full:true, label:L('Phone number','Nomor telepon'), ph:'+62 21 1234 5678'}],
+      build:function(f){ return {text:f.num ? 'tel:' + digits(f.num) : ''}; }},
+    {id:'sms', label:'SMS', fields:[
+      {k:'num', t:'tel', label:L('Phone number','Nomor telepon'), ph:'+62 812 3456 7890'},
+      {k:'msg', t:'textarea', full:true, label:L('Message','Pesan')}],
+      build:function(f){ return {text:f.num ? 'SMSTO:' + digits(f.num) + ':' + (f.msg || '') : ''}; }},
+    {id:'event', label:L('Event','Acara'), fields:[
+      {k:'title', t:'text', full:true, label:L('Event name','Nama acara')},
+      {k:'loc', t:'text', full:true, label:L('Location','Lokasi')},
+      {k:'start', t:'datetime-local', label:L('Starts','Mulai')},
+      {k:'end', t:'datetime-local', label:L('Ends','Selesai')},
+      {k:'desc', t:'textarea', full:true, label:L('Description','Deskripsi')}],
+      build:function(f){
+        if (!f.title || !f.start) return {text:''};
+        var v = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', 'SUMMARY:' + vEsc(f.title), 'DTSTART:' + icsDate(f.start)];
+        if (f.end) v.push('DTEND:' + icsDate(f.end));
+        if (f.loc) v.push('LOCATION:' + vEsc(f.loc));
+        if (f.desc) v.push('DESCRIPTION:' + vEsc(f.desc));
+        v.push('END:VEVENT', 'END:VCALENDAR');
+        return {text:v.join('\r\n')};
+      }}
+  ];
+
+  function buildQris(f){
+    var raw = (f.payload || '').replace(/\s*[\r\n]+\s*/g, '').trim();
+    if (!raw) return {text:''};
+    var items = parseTLV(raw), notes = [];
+    var last = items && items[items.length - 1];
+    if (!items || !last || last.tag !== '63' || items[0].tag !== '00') return {text:raw, notes:[{lv:'warn', msg:u('qrisParse')}]};
+
+    var name = items.filter(function(i){ return i.tag === '59'; })[0], city = items.filter(function(i){ return i.tag === '60'; })[0];
+    if (name) notes.push({lv:'ok', msg:u('qrisMerchant')(name.value, city && city.value)});
+
+    var amount = (f.amount || '').trim();
+    if (!amount) {
+      var calc = crc16(raw.slice(0, -4)), had = last.value.toUpperCase();
+      notes.unshift(calc === had ? {lv:'ok', msg:u('qrisOk')(calc)} : {lv:'err', msg:u('qrisCrc')(had, calc)});
+      return {text:raw, notes:notes};
+    }
+    if (!/^\d+(\.\d*)?$/.test(amount) || amount.length > 13) {
+      notes.unshift({lv:'err', msg:u('qrisAmountBad')});
+      return {text:raw, notes:notes};
+    }
+    // Rebuild: drop old 54 and CRC, set 01 to dynamic, put 54 in tag order, then recompute the CRC
+    var out = items.filter(function(i){ return i.tag !== '54' && i.tag !== '63'; });
+    var poi = out.filter(function(i){ return i.tag === '01'; })[0];
+    if (poi) poi.value = '12'; else out.splice(1, 0, {tag:'01', value:'12'});
+    var at = out.findIndex(function(i){ return +i.tag > 54; });
+    out.splice(at < 0 ? out.length : at, 0, {tag:'54', value:amount});
+    var body = out.map(function(i){ return tlv(i.tag, i.value); }).join('') + '6304';
+    var crc = crc16(body);
+    notes.unshift({lv:'ok', msg:u('qrisAmountSet')(amount, crc)});
+    return {text:body + crc, notes:notes};
+  }
+
+  // ---------- State and form ----------
+  var $ = function(id){ return document.getElementById(id); };
+  var state = {type:'url', values:{}};
+  TYPES.forEach(function(t){ state.values[t.id] = {}; });
+  function typeById(id){ return TYPES.filter(function(t){ return t.id === id; })[0]; }
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  function renderTypes(){
+    $('types').innerHTML = TYPES.map(function(t){
+      return '<button type="button" data-type="' + t.id + '" aria-pressed="' + (t.id === state.type) + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON[t.id] + '</svg>' + esc(tr(t.label)) + '</button>';
+    }).join('');
+  }
+
+  function renderFields(){
+    var t = typeById(state.type), vals = state.values[t.id];
+    $('fields').innerHTML = t.fields.map(function(f){
+      var id = 'f-' + f.k, v = vals[f.k] || '', ph = f.ph ? ' placeholder="' + esc(tr(f.ph)) + '"' : '';
+      var cls = 'f' + (f.full ? ' full' : '');
+      var hint = f.hint ? '<span class="hint">' + esc(tr(f.hint)) + '</span>' : '';
+      if (f.t === 'check') return '<div class="' + cls + '"><label class="check"><input type="checkbox" id="' + id + '" data-k="' + f.k + '"' + (v ? ' checked' : '') + '>' + esc(tr(f.label)) + '</label></div>';
+      var input;
+      if (f.t === 'textarea') input = '<textarea id="' + id + '" data-k="' + f.k + '"' + ph + (f.mono ? ' class="mono" spellcheck="false"' : '') + '>' + esc(v) + '</textarea>';
+      else if (f.t === 'select') input = '<select id="' + id + '" data-k="' + f.k + '">' + f.opts.map(function(o){ return '<option value="' + o[0] + '"' + (v === o[0] ? ' selected' : '') + '>' + esc(tr(o[1])) + '</option>'; }).join('') + '</select>';
+      else input = '<input type="' + f.t + '" id="' + id + '" data-k="' + f.k + '" value="' + esc(v) + '"' + ph + (f.mode ? ' inputmode="' + f.mode + '"' : '') + ' autocomplete="off">';
+      return '<div class="' + cls + '"><label for="' + id + '">' + esc(tr(f.label)) + '</label>' + input + hint + '</div>';
+    }).join('');
+  }
+
+  $('types').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-type]');
+    if (!b) return;
+    state.type = b.getAttribute('data-type');
+    renderTypes(); renderFields(); update();
+    var first = $('fields').querySelector('input,textarea,select');
+    if (first) first.focus();
+  });
+  function onField(e){
+    var k = e.target.getAttribute('data-k');
+    if (!k) return;
+    state.values[state.type][k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    schedule();
+  }
+  $('fields').addEventListener('input', onField);
+  $('fields').addEventListener('change', onField);
+
+  // ---------- QR output ----------
+  var current = null;
+
+  function hexOk(h){ return /^#[0-9a-f]{6}$/i.test(h); }
+  function lum(h){
+    var c = [1, 3, 5].map(function(i){ var v = parseInt(h.substr(i, 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function colors(){
+    var fg = $('fgHex').value, bg = $('bgHex').value;
+    return {fg:hexOk(fg) ? fg : '#000000', bg:hexOk(bg) ? bg : '#ffffff'};
+  }
+
+  function svgFor(qr, margin, c){
+    var n = qr.getModuleCount(), size = n + margin * 2, d = '';
+    for (var r = 0; r < n; r++) for (var col = 0; col < n; col++) if (qr.isDark(r, col)) d += 'M' + (col + margin) + ' ' + (r + margin) + 'h1v1h-1z';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" shape-rendering="crispEdges"><rect width="' + size + '" height="' + size + '" fill="' + c.bg + '"/><path d="' + d + '" fill="' + c.fg + '"/></svg>';
+  }
+
+  function update(){
+    var t = typeById(state.type), out = t.build(state.values[t.id] || {}), text = out.text || '';
+    var notes = (out.notes || []).slice(), c = colors(), ec = $('ec').value, margin = +$('margin').value;
+    current = null;
+    $('payload').textContent = text;
+
+    if (!text) {
+      $('qr').innerHTML = '<div class="placeholder">' + esc(t.id === 'location' ? u('locNeed') : u('empty')) + '</div>';
+      $('meta').textContent = '';
+    } else {
+      try {
+        var qr = qrcode(0, ec);
+        qr.addData(text, 'Byte');
+        qr.make();
+        var svg = svgFor(qr, margin, c);
+        $('qr').innerHTML = svg;
+        var bytes = enc.encode(text).length, n = qr.getModuleCount();
+        $('meta').textContent = u('meta')((n - 17) / 4, n, bytes, ec);
+        current = {qr:qr, svg:svg, text:text, margin:margin, c:c};
+      } catch (err) {
+        $('qr').innerHTML = '<div class="placeholder">' + esc(u('tooLong')) + '</div>';
+        $('meta').textContent = '';
+      }
+    }
+
+    var lf = lum(c.fg), lb = lum(c.bg), ratio = (Math.max(lf, lb) + 0.05) / (Math.min(lf, lb) + 0.05);
+    if (lf > lb) notes.push({lv:'warn', msg:u('inverted')});
+    else if (ratio < 4) notes.push({lv:'warn', msg:u('lowContrast')});
+
+    $('notes').innerHTML = notes.map(function(n){ return '<li class="' + n.lv + '">' + esc(n.msg) + '</li>'; }).join('');
+    ['png', 'svg', 'copy'].forEach(function(id){ $(id).disabled = !current; });
+  }
+
+  var timer = null;
+  function schedule(){ clearTimeout(timer); timer = setTimeout(update, 80); }
+
+  function save(blob, name){
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  $('png').addEventListener('click', function(){
+    if (!current) return;
+    var n = current.qr.getModuleCount(), total = n + current.margin * 2;
+    var cell = Math.max(1, Math.floor(+$('size').value / total)), px = cell * total;
+    var cv = document.createElement('canvas');
+    cv.width = cv.height = px;
+    var g = cv.getContext('2d');
+    g.fillStyle = current.c.bg; g.fillRect(0, 0, px, px);
+    g.fillStyle = current.c.fg;
+    for (var r = 0; r < n; r++) for (var col = 0; col < n; col++) if (current.qr.isDark(r, col)) g.fillRect((col + current.margin) * cell, (r + current.margin) * cell, cell, cell);
+    cv.toBlob(function(b){ save(b, 'qr-' + state.type + '.png'); }, 'image/png');
+  });
+  $('svg').addEventListener('click', function(){
+    if (current) save(new Blob([current.svg], {type:'image/svg+xml'}), 'qr-' + state.type + '.svg');
+  });
+  $('copy').addEventListener('click', function(){
+    if (!current) return;
+    var btn = this;
+    navigator.clipboard.writeText(current.text).then(function(){
+      btn.textContent = u('copied');
+      setTimeout(function(){ btn.textContent = u('copy'); }, 1400);
+    }, function(){});
+  });
+
+  // Colour pickers and hex fields stay in sync
+  [['fg', 'fgHex'], ['bg', 'bgHex']].forEach(function(p){
+    $(p[0]).addEventListener('input', function(){ $(p[1]).value = this.value; schedule(); });
+    $(p[1]).addEventListener('input', function(){ if (hexOk(this.value)) $(p[0]).value = this.value.toLowerCase(); schedule(); });
+  });
+  ['ec', 'margin'].forEach(function(id){ $(id).addEventListener('change', update); });
+
+  // ---------- Language and theme ----------
+  function applyLang(l){
+    lang = l;
+    document.documentElement.lang = l;
+    document.querySelectorAll('[data-t]').forEach(function(el){ el.textContent = u(el.getAttribute('data-t')); });
+    document.querySelectorAll('.lang button').forEach(function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === l)); });
+    try { localStorage.setItem('qrgen-lang', l); } catch (e) {}
+    renderTypes(); renderFields(); update();
+  }
+  document.querySelectorAll('.lang button').forEach(function(b){
+    b.addEventListener('click', function(){ applyLang(b.getAttribute('data-lang')); });
+  });
+
+  var root = document.documentElement;
+  try { var t = localStorage.getItem('theme'); if (t) root.setAttribute('data-theme', t); } catch (e) {}
+  $('theme').addEventListener('click', function(){
+    var cur = root.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('theme', next); } catch (e) {}
+  });
+
+  var saved = null;
+  try { saved = localStorage.getItem('qrgen-lang'); } catch (e) {}
+  applyLang(saved || ((navigator.language || '').toLowerCase().indexOf('id') === 0 ? 'id' : 'en'));
+})();
+</script>
+</body>
+</html>
